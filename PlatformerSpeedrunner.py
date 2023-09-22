@@ -1,6 +1,8 @@
 import pygame
 import random
 import time
+import statistics
+import math
 
 # Initialize Pygame
 pygame.init()
@@ -12,8 +14,8 @@ OBSTACLE_SIZE = 30
 ENDZONE_SIZE = 40
 PLAYER_SPEED = 2
 GRAVITY = 0.03
-JUMP_STRENGTH = -4
-MAX_JUMPS = 1
+JUMP_STRENGTH = -1.25
+MAX_JUMPS = 3
 
 # Colors
 WHITE = (135, 130, 120)
@@ -34,15 +36,20 @@ player_y = HEIGHT - PLAYER_SIZE
 player_vel_x = 0
 player_vel_y = 0
 on_ground = False
-jumps = 0
+jumps = 1
+
 
 # Level attributes
 level = 1
 level_start_time = 0
 
+# Game attributes
+paused = False
+
 # Scoring
 score_font = pygame.font.Font(None, 36)
 score = 0
+previousScores = []
 
 # Red obstacles list
 red_obstacles = []
@@ -61,7 +68,7 @@ def generate_level():
 
     # Randomize platform positions (change every new level)
     if level < 10:
-        num_platforms = 20 - level 
+        num_platforms = 20 - level
     else:
         num_platforms = 10
     platforms = [(random.randint(50, WIDTH - 50), random.randint(100, HEIGHT - 100)) for _ in range(num_platforms)]
@@ -92,6 +99,7 @@ controls_text = button_font.render("Controls:", True, BLACK)
 controls_rect = controls_text.get_rect(topleft=(50, 50))
 
 controls_desc = [
+
     "A: Move Left",
     "D: Move Right",
     "W: Jump",
@@ -106,19 +114,18 @@ while show_title_screen:
     screen.blit(title_text, title_rect)
     screen.blit(button_text, button_rect)
     screen.blit(controls_text, controls_rect)
-    
+
     for text, rect in zip(controls_desc_surface, controls_desc_rects):
         screen.blit(text, rect)
 
     pygame.display.update()
-    
+
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
                 show_title_screen = False
                 generate_level()
-
-# Main game loop
+            # Main game loop
 running = True
 while running:
     for event in pygame.event.get():
@@ -127,24 +134,46 @@ while running:
 
     # Player controls
     keys = pygame.key.get_pressed()
+    if event.type == pygame.KEYDOWN:
+        #For buttons that should only activate once.
+        if keys[pygame.K_e]:
+            #Generate a new level
+            screen.fill(GRAY)
+            GenerationScreen = score_font.render("Generating New Level", True, BLACK)
+            screen.blit(GenerationScreen, (WIDTH // 2 - GenerationScreen.get_width() // 2, HEIGHT // 2 - GenerationScreen.get_height() // 2))
+            pygame.display.update()
+            pygame.time.wait(1000)
+            generate_level()
+            score = score - 1
+        if keys[pygame.K_ESCAPE]:
+            #Open the pause menu
+            if paused:
+                paused = False
+            if not paused:
+                paused = True
+            pygame.time.wait(120)
+        if keys[pygame.K_r]:
+            previousScores = []
     if keys[pygame.K_a]:
         player_x -= PLAYER_SPEED
     if keys[pygame.K_d]:
         player_x += PLAYER_SPEED
-    if keys[pygame.K_w] and (on_ground or jumps < MAX_JUMPS):
-        player_vel_y = JUMP_STRENGTH
-        on_ground = False
-        jumps += 1
-    if keys[pygame.K_e]:
-        #Generate a new level
-        screen.fill(GRAY)
-        GenerationScreen = score_font.render("Generating New Level", True, BLACK)
-        screen.blit(GenerationScreen, (WIDTH // 2 - GenerationScreen.get_width() // 2, HEIGHT // 2 - GenerationScreen.get_height() // 2))
-        pygame.display.update()
-        pygame.time.wait(1000)
-        generate_level()
-        score = score - 1
-    
+    if keys[pygame.K_w] and (jumps < MAX_JUMPS):
+            player_vel_y += JUMP_STRENGTH
+            on_ground = False
+            jumps += 1
+    # Adding jump variablitiy by the player.
+    if keys[pygame.K_UP]:
+            JUMP_STRENGTH -= .025
+    if keys[pygame.K_DOWN]:
+            JUMP_STRENGTH += (0.025/2)
+
+
+
+
+
+
+
 
     # Apply gravity
     if not on_ground:
@@ -183,13 +212,15 @@ while running:
         score = time.time() - level_start_time  # Calculate the score (time taken)
         generate_level()
 
-        # Display a yellow square for about 1 second along with the score
+        # Display (for about 1 second) the score
         screen.fill(GRAY)
-        score = score - 1
-        score_text = score_font.render(f"Level {level} Time: {score:.2f}s", True, BLACK)
+        score = score - 2
+        #To find the average score
+        previousScores.append(score)
+        score_text = score_font.render(f"Level {level} Time: {score:.2f}s Average = {round(statistics.mean(previousScores), 2)}", True, BLACK)
         screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 - score_text.get_height() // 2))
         pygame.display.update()
-        pygame.time.wait(1000)
+        pygame.time.wait(2000)
 
     # Check collision with platforms
     on_ground = False
@@ -227,8 +258,11 @@ while running:
         pygame.draw.rect(screen, RED, (red_obstacle_x, red_obstacle_y, OBSTACLE_SIZE, OBSTACLE_SIZE))
 
     # Update the display
-    pygame.display.update()
+    if not paused:
+        pygame.display.update()
+    else:
+        pygame.time.wait(100)
+
 
 # Quit the game
 pygame.quit()
-
