@@ -1,6 +1,6 @@
 import time
 import sys
-import art
+#import art #An old and temporary solution to adding some "graphics".
 import random
 #declare global variables
 #Order is [iron, copper, zinc, tin, lead, nickel, chromium, steel, brass, bronze, soul]
@@ -187,8 +187,8 @@ def engageCombat(): #Start Combat
         else:
             print("That's not one of the options. Either ATTACK or BLOCK.")
             choice = input()
-def Menu():
-    art.Menu()
+#def Menu():
+    #art.Menu()
 def startUp():
     print("You open your eyes. Everything around you is snowy and bitter cold. You have been exiled from Wainwright,")
     print("your home. Everyone around you has turned their back on you, and you have been put to the test.")
@@ -531,6 +531,6 @@ def beginForge():
 
 
 while(1 == 1):#Makes a loop you can break out from. This would end the game.
-    Menu()
+    #Menu() #Old art system
     startUp()#Begin the story
     break
