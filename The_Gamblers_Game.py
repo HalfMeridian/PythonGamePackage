@@ -141,17 +141,17 @@ def diceGame():
 
 
         print("What number from 1-6 do you guess?")
-        guess = input()
         inDialogue = True
         while inDialogue:
             #Check that guess is an int
             try:
-                guess = int(guess)
+                guess = int(float(str(input()))) #maybe it will run smoother if it likes the inpout.
             except:
-                pass
-            if not (guess >= 1) and (guess <= 6):
+                print("That's not a number that you would ever expect on a dice.")
+                guess = int(float(str(input()))) #maybe it will run smoother if it likes the inpout.
+            if not (int(guess) >= 1) and (int(guess) <= 6):
                 print("That's not even a number on the dice.")
-                guess = input()
+                guess = int(float(input()))
             elif not type(diceCount) == int:
                 print("The cigar smoke must be getting to you. That's not a number on the dice.")
                 print("What number on the dice do you think it will be?")
